@@ -1032,6 +1032,23 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
     };
   };
 
+  let viteLastEnv: string[] = [];
+
+  /**
+   * Mutates `viteLastEnv` and `process.env` as a side-effect 
+   * Workaround:
+   *  - https://github.com/remix-run/remix/issues/9587
+   *  - https://github.com/vitejs/vite/issues/17689
+   * */
+  let updateEnv = (loadEnv: () => Record<string, string>) => {
+    for (let key of viteLastEnv) {
+      delete process.env[key];
+    }
+    let loadedEnv = loadEnv();
+    viteLastEnv = Object.keys(loadedEnv).filter((key) => !(key in process.env));
+    Object.assign(process.env, loadedEnv);
+  };
+
   return [
     {
       name: "remix",
@@ -1059,8 +1076,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
 
         await updateRemixPluginContext();
 
-        Object.assign(
-          process.env,
+        updateEnv(() =>
           vite.loadEnv(
             viteConfigEnv.mode,
             ctx.rootDirectory,
