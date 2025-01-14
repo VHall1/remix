@@ -40,13 +40,10 @@ test("Vite / Load context / hmr", async ({ page, viteDev }) => {
   let { cwd, port } = await viteDev(files);
   let edit = createEditor(cwd);
 
-  let pageErrors: unknown[] = [];
-  page.on("pageerror", (error) => pageErrors.push(error));
-
   await page.goto(`http://localhost:${port}/dotenv`, {
     waitUntil: "networkidle",
   });
-  expect(pageErrors).toEqual([]);
+  expect(page.errors).toEqual([]);
 
   let loaderContent = page.locator("[data-dotenv-route-loader-content]");
   await expect(loaderContent).toHaveText("Content from .env file");
@@ -60,5 +57,5 @@ test("Vite / Load context / hmr", async ({ page, viteDev }) => {
   await page.waitForLoadState("networkidle");
   await expect(loaderContent).toHaveText("New content from .env file");
 
-  expect(pageErrors).toEqual([]);
+  expect(page.errors).toEqual([]);
 });
